@@ -4,66 +4,181 @@
       Loading
     </div>
     <div v-else>
-    <div class="judul">
-      <h1>Ransum Jago</h1>
-      <h4>Ransum Optimal dengan Harga Minimal</h4>
-    </div>
+      <div class="judul">
+          <h1>Ransum Jago</h1>
+          <h4>Ransum Optimal dengan Harga Minimal</h4>
+        </div>
+    <b-tabs v-model="tab" content-class="mt-3">
+      <b-tab title="Ransum PBBH">
+        <div>
+          <b-alert class="mt-3" v-model="showDismissibleAlertComponent" variant="danger" dismissible>
+            Cek Kembali Bahan dan PBBH yang Diinginkan
+          </b-alert>
+          <p><b>Kondisi Sapi</b></p>
+          <div class="mt-3">
+            <p>Tipe Pemeliharaan</p>
+            <b-form-select v-model="selectedtype" :options="optionstype"></b-form-select>
+          </div>
+          <div class="mt-3">
+            <p>Bobot Sapi (Kg)</p>
+            <b-form-input v-model="selectedweight" type="number"></b-form-input>
+            <!-- <b-form-select v-model="selectedweight" :options="optionsweight"></b-form-select> -->
+          </div>
+          <div class="mt-3">
+            <p>Jenis Kelamin Sapi</p>
+            <b-form-select v-model="selectedgender" :options="optionsgender"></b-form-select>
+          </div>
+          <div v-if="selectedtype === 1" class="mt-3">
+            <p>PBBH yang Diinginkan (Kg)</p>
+            <b-form-select v-model="selectedpbbh">
+              <option :value="null" disabled>-- Pilih Pertumbuhan Bobot Badan Harian --</option>
+              <option v-for="option in filterPbbh" :key="option.adg" :value="option.id" >
+            <p>{{ option.adg }}</p>
+          </option>
+            </b-form-select>
+          </div>
+          <div class="mt-3">
+            <p>Kemampuan Konsumsi (%)</p>
+            <b-form-input v-model="consumption" placeholder="2.2 (Opsional)"></b-form-input>
+          </div>
+        </div>
 
-    <div class="mt-3">
-      <p><b>Kategori Ransum</b></p>
-      <b-form-select v-model="selectedransum" :options="optionsransum"></b-form-select>
-      <p>{{ optionsransum[selectedransum-1].rule }}</p>
-    </div>
+        <div class="mt-3">
+          <p><b>Pilih Bahan Pakan yang Tersedia</b></p>
+          <b-form-select v-model="selectedcategory" :options="optionscategory"></b-form-select>
+          <b-form-select v-model="selecteditem">
+            <option :value="null" disabled>-- Pilih Bahan Pakan --</option>
+            <option v-for="option in filterItems" :key="option.id" :value="option.id">
+          <p>{{ option.nama }}</p>
+        </option>
+          </b-form-select>
+          <button class="mt-2" :disabled="selecteditem === null" @click.prevent="onAddItems()">+ Bahan Pakan</button>
+          <button class="mt-2" @click.prevent="onAddItemsCustom()">+ Custom Bahan Pakan</button>
+          <ve-table class="mt-3" :fixed-header="true" :columns="columns" :table-data="tableData" />
+          <div v-show="tableData.length === 0" class="p-5 text-center border">
+              Tidak Ada Bahan yang Dimasukkan
+          </div>
 
-    <div>
-      <p><b>Kondisi Sapi</b></p>
-      <div class="mt-3">
-        <p>Tipe Pemeliharaan</p>
-        <b-form-select v-model="selectedtype" :options="optionstype"></b-form-select>
+        </div>
+        <div>
+          <button class="mt-2" :disabled="tableData.length === 0" @click.prevent="onsubmit()">Kalkulasi</button>
+        </div>
+        <VueHtml2pdf
+        :show-layout="false"
+        :float-layout="false"
+        :enable-download="true"
+        :preview-modal="false"
+        :paginate-elements-by-height="2480"
+        filename="Hasil Kalkulasi"
+        :pdf-quality="2"
+        :manual-pagination="false"
+        pdf-format="a4"
+        pdf-orientation="portrait"
+        :pdf-content-width="1920"
+        ref="html2Pdf"
+    >
+      <section class="ml-3 mr-3" slot="pdf-content">
+        <div v-show="isCalculate" class="mt-5">
+          <p><b>Hasil Optimasi Ransum</b></p>
+          <p>Kondisi Sapi : {{ optionsgender[selectedgender].text }}, {{ selectedweight }} Kg </p>
+          <p v-show="result.length !== 0">Berat Kering : {{ resCalculate[0] }} kg</p>
+          <p>Nutrisi yang Harus Diberikan:</p>
+          <ve-table class="mt-3" :columns="columnsNutrient" :table-data="resComposition" :border-y="true" />
+          <b-alert class="mt-3" v-model="showDismissibleAlert" variant="danger" dismissible>
+            Tidak Ada Komposisi Bahan Pakan yang Memenuhi
+          </b-alert>
+          <div v-show="result.length !== 0">
+            <ve-table class="mt-3" :fixed-header="true" :footer-data="footerData" rowKeyFieldName="rowKey" :columns="resColumns" :table-data="result" :border-y="true" />
+            <i>*Perhitungan dapat sedikit bergeser karena faktor pembulatan</i>
+          </div>
+        </div>
+      </section>
+    </VueHtml2pdf>
+    <div v-show="isCalculate" class="mt-3">
+        <div v-show="result.length !== 0">
+          <p class="mt-3">Takaran Pemberian:</p>
+          <ve-table class="mt-3" :columns="columnsTakaran" :table-data="result" :border-y="true" />
+        </div>
       </div>
-      <div class="mt-3">
-        <p>Bobot Sapi (Kg)</p>
-        <b-form-select v-model="selectedweight" :options="optionsweight"></b-form-select>
-      </div>
-      <div class="mt-3">
-        <p>Jenis Kelamin Sapi</p>
-        <b-form-select v-model="selectedgender" :options="optionsgender"></b-form-select>
-      </div>
-      <div v-if="selectedtype === 1" class="mt-3">
-        <p>PBBH yang Diinginkan (Kg)</p>
-        <b-form-select v-model="selectedpbbh" required>
-          <option v-for="option in filterPbbh" :key="option.adg" :value="option.id">
-        <p>{{ option.adg }}</p>
-      </option>
-        </b-form-select>
-      </div>
+    <div v-show="result.length !== 0" class="mt-3 mx-3">
+      <button @click.prevent="generateReport()">Download Hasil</button>
     </div>
-
-    <div class="mt-3">
-      <p><b>Pilih Bahan Pakan yang Tersedia</b></p>
-      <b-form-select v-model="selectedcategory" :options="optionscategory"></b-form-select>
-      <b-form-select v-model="selecteditem">
-        <option :value="null" disabled>-- Please select an option --</option>
-        <option v-for="option in filterItems" :key="option.id" :value="option.id">
-      <p>{{ option.nama }}</p>
-    </option>
-      </b-form-select>
-      <button v-if="selecteditem !== null" class="mt-2" @click.prevent="onAddItems()">+ Bahan Pakan</button>
-      <ve-table class="mt-3" :fixed-header="true" :columns="columns" :table-data="tableData" />
-    </div>
-    <div>
-      <button v-if="selecteditem !== null" class="mt-2" @click.prevent="onsubmit()">Kalkulasi</button>
-    </div>
-    <div class="mt-5">
-      <p><b>Hasil Optimasi Ransum</b></p>
-      <p>Berat Kering : {{ resCalculate[0] }} kg</p>
-      <p>Nutrisi yang Harus Diberikan:</p>
-      <ve-table class="mt-3" :columns="columnsNutrient" :table-data="resComposition" />
-      <ve-table class="mt-3" :fixed-header="true" :footer-data="footerData"
-      rowKeyFieldName="rowKey" :columns="resColumns" :table-data="result" />
-      <p>Takaran Pemberian:</p>
-      <ve-table class="mt-3" :columns="columnsTakaran" :table-data="result" />
-    </div>
+      </b-tab>
+      <b-tab title="Ransum Custom">
+        <div class="mt-3">
+          <p><b>Komposisi Nutrisi yang Diinginkan</b></p>
+          <b-form>
+            <label class="mr-sm-2" for="inline-form-custom-select-pref">Protein Kasar (%)</label>
+            <b-form-input v-model="formDataCustom.head.pk"></b-form-input>
+          </b-form>
+          <b-form>
+            <label class="mr-sm-2" for="inline-form-custom-select-pref">TDN (%)</label>
+            <b-form-input v-model="formDataCustom.head.tdn"></b-form-input>
+          </b-form>
+          <b-form>
+            <label class="mr-sm-2">Kalsium (%)</label>
+            <b-form-input v-model="formDataCustom.head.ca"></b-form-input>
+          </b-form>
+          <b-form>
+            <label class="mr-sm-2" for="inline-form-custom-select-pref">Fosfor (%)</label>
+            <b-form-input v-model="formDataCustom.head.p"></b-form-input>
+          </b-form>
+        </div>
+        <div class="mt-3">
+          <p><b>Pilih Bahan Pakan yang Tersedia</b></p>
+          <b-form-select v-model="selectedcategory" :options="optionscategory"></b-form-select>
+          <b-form-select v-model="selecteditem">
+            <option :value="null" disabled>-- Please select an option --</option>
+            <option v-for="option in filterItems" :key="option.id" :value="option.id">
+          <p>{{ option.nama }}</p>
+        </option>
+          </b-form-select>
+          <button class="mt-2" :disabled="selecteditem === null" @click.prevent="onAddItems()">+ Bahan Pakan</button>
+          <button class="mt-2" @click.prevent="onAddItemsCustom()">+ Custom Bahan Pakan</button>
+          <ve-table class="mt-3" :fixed-header="true" :columns="columns" :table-data="tableDataCustom" />
+          <div v-show="tableDataCustom.length === 0" class="p-5 text-center border">
+              Tidak Ada Bahan yang Dimasukkan
+          </div>
+        </div>
+        <div>
+          <button class="mt-2" :disabled="tableDataCustom.length === 0" @click.prevent="onsubmit()">Kalkulasi</button>
+        </div>
+        <b-alert class="mt-3" v-model="showDismissibleAlertCustom" variant="danger" dismissible>
+          Tidak Ada Komposisi Bahan Pakan yang Memenuhi
+        </b-alert>
+        <VueHtml2pdf
+        :show-layout="false"
+        :float-layout="false"
+        :enable-download="true"
+        :preview-modal="false"
+        :paginate-elements-by-height="1400"
+        filename="myPDF"
+        :pdf-quality="2"
+        :manual-pagination="false"
+        pdf-format="a4"
+        pdf-orientation="portrait"
+        pdf-content-width="1920"
+        ref="html2PdfCustom"
+    >
+        <section class="ml-3 mr-3" slot="pdf-content">
+        <div v-show="resultCustom.length !== 0" class="mt-5">
+          <p><b>Hasil Optimasi Ransum</b></p>
+          <div>
+            <p>Protein Kasar (min) : {{ formDataCustom.head.pk }}</p>
+            <p>TDN (min) : {{ formDataCustom.head.tdn }}</p>
+            <p>Kalsium (min): {{ formDataCustom.head.ca }}</p>
+            <p>Fosfor (min): {{ formDataCustom.head.p }}</p>
+            <ve-table class="mt-3" :fixed-header="true" rowKeyFieldName="rowKey" :footer-data="footerDataCustom" :columns="resColumns" :table-data="resultCustom" />
+            <i>*Perhitungan dapat sedikit bergeser karena faktor pembulatan</i>
+          </div>
+        </div>
+        </section>
+        </VueHtml2pdf>
+        <div class="ml-3 mr-3 mt-3">
+          <button v-show="resultCustom.length !== 0" @click.prevent="generateReportCustom()">Download Kalkulasi</button>
+        </div>
+      </b-tab>
+    </b-tabs>
   </div>
   </div>
 </template>
@@ -74,6 +189,10 @@ export default {
   name: 'IndexPage',
   data() {
     return {
+      tab: 0,
+      showDismissibleAlert: false,
+      showDismissibleAlertComponent: false,
+      showDismissibleAlertCustom: false,
       selectedtype: 1,
       selectedransum: 1,
       selectedcategory: 0,
@@ -82,6 +201,8 @@ export default {
       selectedpbbh: null,
       selecteditem: null,
       weight: null,
+      consumption: null,
+      isCalculate: false,
       resCalculate: [],
       optionstype: [
         {value: 1, text: "Penggemukan"},
@@ -95,7 +216,7 @@ export default {
         {value: 0, text: "Semua"},
         {value: 1, text: "Hijauan"},
         {value: 2, text: "Sumber Karbohidrat"},
-        {value: 3, text: "Sumber Protein"}
+        {value: 3, text: "Sumber Protein"},
       ],
       optionsweight: [
         {value: 100, text: "100"},
@@ -132,7 +253,25 @@ export default {
         }
       ],
       columns: [
-        { field: "nama", key: "a", title: "Nama Bahan", align: "center", renderBodyCell: null, fixed: "left" },
+        { field: "nama", key: "a", title: "Nama Bahan", align: "center", fixed: "left", renderBodyCell: ({ row, column, rowIndex }, h) => {
+          if (row.category === 4) {
+            const text = row[column.field]
+            return h('input', {
+              attrs: {
+                type: 'text',
+                value: text
+              },
+              on: {
+                change: (event) => {
+                  row.nama = event.target.value
+                }
+              }
+            },
+            )
+          } else {
+            return (row.nama)
+          }
+         } },
         { field: "category", key: "b", title: "Kategori", align: "left", renderBodyCell: ({ row, column, rowIndex }, h) => {
           if (row.category === 1) {
             return "Hijauan"
@@ -140,12 +279,89 @@ export default {
             return "Sumber Karbohidrat"
           } else if (row.category === 3) {
             return "Sumber Protein"
+          } else {
+            return "Custom"
           }
          }},
-        { field: "cp", key: "c", title: "Protein Kasar (%)", align: "center", renderBodyCell: null},
-        { field: "tdn", key: "tdn", title: "TDN (%)", align: "center", renderBodyCell: null},
-        { field: "ca", key: "ca", title: "Kalsium (%)", align: "center", renderBodyCell: null},
-        { field: "p", key: "p", title: "Fosfor (%)", align: "center", renderBodyCell: null},
+        {
+          field: "bk", key: "bk", title: "Bahan Kering", align: "center"
+        },
+        { field: "cp", key: "c", title: "Protein Kasar (%)", align: "center", renderBodyCell: ({ row, column, rowIndex }, h) => {
+          if (row.category === 4) {
+            const text = row[column.field]
+            return h('input', {
+              attrs: {
+                type: 'number',
+                value: text
+              },
+              on: {
+                change: (event) => {
+                  row.cp = parseInt(event.target.value)
+                }
+              }
+            },
+            )
+          } else {
+            return (row.cp)
+          }
+         } },
+        { field: "tdn", key: "tdn", title: "TDN (%)", align: "center", renderBodyCell: ({ row, column, rowIndex }, h) => {
+          if (row.category === 4) {
+            const text = row[column.field]
+            return h('input', {
+              attrs: {
+                type: 'number',
+                value: text
+              },
+              on: {
+                change: (event) => {
+                  row.tdn = parseInt(event.target.value)
+                }
+              }
+            },
+            )
+          } else {
+            return (row.tdn)
+          }
+         }},
+        { field: "ca", key: "ca", title: "Kalsium (%)", align: "center", renderBodyCell: ({ row, column, rowIndex }, h) => {
+          if (row.category === 4) {
+            const text = row[column.field]
+            return h('input', {
+              attrs: {
+                type: 'number',
+                value: text
+              },
+              on: {
+                change: (event) => {
+                  row.ca = parseFloat(event.target.value)
+                }
+              }
+            },
+            )
+          } else {
+            return (row.ca)
+          }
+         } },
+        { field: "p", key: "p", title: "Fosfor (%)", align: "center", renderBodyCell: ({ row, column, rowIndex }, h) => {
+          if (row.category === 4) {
+            const text = row[column.field]
+            return h('input', {
+              attrs: {
+                type: 'num',
+                value: text
+              },
+              on: {
+                change: (event) => {
+                  row.p = parseFloat(event.target.value)
+                }
+              }
+            },
+            )
+          } else {
+            return (row.p)
+          }
+         } },
         { field: "minpercentage", key: "f", title: "Kandungan Minimal (%)", align: "center", renderBodyCell: ({ row, column, rowIndex }, h) => {
           const text = row[column.field]
           return h('input', {
@@ -155,7 +371,7 @@ export default {
           },
           on: {
             change: (event) => {
-              row.minpercentage = parseInt(event.target.value)
+              row.minpercentage = parseFloat(event.target.value)
             }
           }
         },
@@ -164,17 +380,17 @@ export default {
         { field: "maxpercentage", key: "g", title: "Kandungan Maksimal (%)", align: "center", renderBodyCell: ({ row, column, rowIndex }, h) => {
           const text = row[column.field]
           return h('input', {
-          attrs: {
-            type: 'number',
-            value: text
-          },
-          on: {
-            change: (event) => {
-              row.maxpercentage = parseInt(event.target.value)
+            attrs: {
+              type: 'number',
+              value: text
+            },
+            on: {
+              change: (event) => {
+                row.maxpercentage = parseFloat(event.target.value)
+              }
             }
-          }
-        },
-        )
+          },
+          )
         }},
         { field: "harga", key: "harga", title: "Harga", align: "center", renderBodyCell: ({ row, column, rowIndex }, h) => {
           const text = row[column.field]
@@ -185,7 +401,7 @@ export default {
           },
           on: {
             change: (event) => {
-              row.harga = parseInt(event.target.value)
+              row.harga = parseFloat(event.target.value)
             }
           }
         },
@@ -247,19 +463,44 @@ export default {
       ],
       columnsTakaran:[
       { field: "nama", key: "nama", title: "Nama Bahan", align: "center", renderBodyCell: null, fixed: "left" },
-      { field: "takaran", key: "takaran", title: "Takaran (Kg)", align: "center", renderBodyCell: null, fixed: "left" }
+      { field: "takaran", key: "takaran", title: "Takaran Bahan Kering (Kg)", align: "center", renderBodyCell: null, fixed: "left" },
+      { field: "takaranBasah", key: "takaranBasah", title: "Takaran Bahan Basah (Kg)", align: "center", renderBodyCell: null, fixed: "left" }
       ],
       tableData: [],
+      tableDataCustom: [],
       dataItems: {},
       dataType: {},
       dataIt: {},
       formData: {
         head: [],
+        item: [],
+        consumption: null
+      },
+      formDataCustom: {
+        head : {
+          pk: 0,
+          tdn: 0,
+          ca: 0,
+          p: 0
+        },
         item: []
       },
       checkComponent: true,
       result: [],
+      resultCustom: [],
       footerData : [
+        {
+          rowKey: 0,
+          nama : 'Total',
+          resPercentage: '100%',
+          totalPK: 0,
+          totalTDN: 0,
+          totalCa: 0,
+          totalP: 0,
+          hargatotal:0
+        }
+      ],
+      footerDataCustom : [
         {
           rowKey: 0,
           nama : 'Total',
@@ -298,10 +539,21 @@ export default {
       }
     },
     filterPbbh() {
+      const hund = parseInt(Math.floor(this.selectedweight / 50))
+      const num = this.selectedweight - 50*hund
+      let inputweight = 0
+      if (num === 0) {
+        // eslint-disable-next-line vue/no-side-effects-in-computed-properties
+        inputweight = 50*hund
+      }
+      else {
+        inputweight = 50*(hund+1)
+      }
+      console.log(inputweight);
       // eslint-disable-next-line vue/no-side-effects-in-computed-properties
       this.optionsPbbh = [];
       for (let i = 0; i < this.dataType.length; i++) {
-          if (this.dataType[i].gender === this.selectedgender && this.dataType[i].weight === this.selectedweight) {
+          if (this.dataType[i].gender === this.selectedgender && this.dataType[i].weight === inputweight) {
           // eslint-disable-next-line vue/no-side-effects-in-computed-properties
           this.optionsPbbh.push(this.dataType[i])
         }
@@ -310,6 +562,12 @@ export default {
     },
   },
   methods: {
+    generateReport () {
+            this.$refs.html2Pdf.generatePdf()
+        },
+    generateReportCustom () {
+        this.$refs.html2PdfCustom.generatePdf()
+    },
     async loadDataType() {
       await this.$axios.get('/type')
       .then(res=>{
@@ -324,37 +582,72 @@ export default {
     },
     onAddItems(){
       const item = this.dataItems.find(x=>x.id===this.selecteditem)
-      const checkitem = this.tableData.find(x=>x.id===this.selecteditem)
-      if (checkitem === undefined) {
-        this.tableData.push(item);
+      if (this.tab === 0) {
+        const checkitem = this.tableData.find(x=>x.id===this.selecteditem)
+        if (checkitem === undefined) {
+          this.tableData.push(item);
+        }
+      } else if (this.tab === 1) {
+        const checkitem = this.tableDataCustom.find(x=>x.id===this.selecteditem)
+        if (checkitem === undefined) {
+          this.tableDataCustom.push(item);
+        }
+      }
+    },
+    onAddItemsCustom(){
+      if (this.tab === 0) {
+        this.tableData.push(
+        {
+        category: 4,
+        nama: "Custom",
+        bk: 0,
+        cp: 0,
+        me: 0,
+        tdn: 0,
+        ca: 0,
+        p: 0,
+        minpercentage: 0,
+        maxpercentage: 100,
+        harga: 0
+        },
+        )
+      } else if (this.tab === 1) {
+        this.tableDataCustom.push(
+        {
+        category: 4,
+        nama: "Custom",
+        bk: 0,
+        cp: 0,
+        me: 0,
+        tdn: 0,
+        ca: 0,
+        p: 0,
+        minpercentage: 0,
+        maxpercentage: 100,
+        harga: 0
+        },
+        )
       }
     },
     onClickDelete(rowIndex){
-      this.tableData.splice(rowIndex, 1);
-    },
-    checkComponentRansum(){
-      this.checkComponent = true
-      const hijauan = this.tableData.find(x=>x.category===1)
-        const skarbo = this.tableData.find(x=>x.category===2)
-        const sprotein = this.tableData.find(x=>x.category===3)
-      if (this.selectedransum === 1) {
-        if (hijauan === null || skarbo === null || sprotein === null) {
-          this.checkComponent = false
-        }
-      }
-      if (this.selectedransum === 2) {
-        if (skarbo === null || sprotein === null) {
-          this.checkComponent = false
-        }
+      if (this.tab === 0) {
+        this.tableData.splice(rowIndex, 1);
+      } else if (this.tab === 1) {
+        this.tableDataCustom.splice(rowIndex, 1);
       }
     },
     onsubmit(){
-      this.result = []
-      this.checkComponentRansum()
-      if (this.checkComponent) {
+      if (this.tab === 0) {
+        this.showDismissibleAlert = false
+        this.showDismissibleAlertComponent = false
+        this.result = []
+        this.formData.consumption = null
         const item = this.dataType.find(x=>x.id===this.selectedpbbh)
         this.formData.head = item
         this.formData.item = this.tableData
+        if (this.consumption !== null && this.consumption !== '') {
+          this.formData.consumption = parseFloat(this.consumption)
+        }
         let sumPK = 0
         let sumTDN = 0
         let sumCa = 0
@@ -362,28 +655,79 @@ export default {
         this.$axios
         .post('/calculate', this.formData)
         .then(res => {
-          this.resCalculate = res.data
-          this.result = this.tableData
-          this.result.forEach(object => {
-            object.resPercentage = 0;
-            object.takaran = 0;
-          });
-          for (let i = 0; i < this.result.length; i++) {
-            this.result[i].resPercentage = res.data[3][i];
-            this.result[i].takaran = (this.result[i].resPercentage * res.data[0]).toFixed(2)
-            sumPK += this.result[i].cp * this.result[i].resPercentage
-            sumTDN += this.result[i].tdn * this.result[i].resPercentage
-            sumCa += this.result[i].ca * this.result[i].resPercentage
-            sumP += this.result[i].p * this.result[i].resPercentage
+          this.resCalculate = []
+          if (res.data[2] !== null) {
+            this.resCalculate = res.data
+            this.result = this.tableData
+            this.result.forEach(object => {
+              object.resPercentage = 0;
+              object.takaran = 0;
+              object.takaranBasah = 0;
+            });
+            for (let i = 0; i < this.result.length; i++) {
+              this.result[i].resPercentage = res.data[3][i];
+              this.result[i].takaran = (this.result[i].resPercentage * res.data[0]).toFixed(2)
+              this.result[i].takaranBasah = (this.result[i].resPercentage * res.data[0]/this.result[i].bk).toFixed(2)
+              sumPK += this.result[i].cp * this.result[i].resPercentage
+              sumTDN += this.result[i].tdn * this.result[i].resPercentage
+              sumCa += this.result[i].ca * this.result[i].resPercentage
+              sumP += this.result[i].p * this.result[i].resPercentage
+            }
+            this.footerData[0].totalPK = sumPK.toFixed(2) + '%'
+            this.footerData[0].totalTDN = sumTDN.toFixed(2) + '%'
+            this.footerData[0].totalCa = sumCa.toFixed(2) + '%'
+            this.footerData[0].totalP = sumP.toFixed(2) + '%'
+            this.footerData[0].hargatotal = res.data[2].toFixed()
           }
-          this.footerData[0].totalPK = sumPK.toFixed(2) + '%'
-          this.footerData[0].totalTDN = sumTDN.toFixed(2) + '%'
-          this.footerData[0].totalCa = sumCa.toFixed(2) + '%'
-          this.footerData[0].totalP = sumP.toFixed(2) + '%'
-          this.footerData[0].hargatotal = res.data[2].toFixed()
+          else {
+            this.showDismissibleAlert = true
+          }
           for (let index = 0; index < this.resComposition.length; index++) {
             this.resComposition[index].value = -res.data[1][index].toFixed(1)
           }
+          this.isCalculate = true
+        })
+        .catch(error => {
+          // eslint-disable-next-line no-console
+          console.log(error)
+          this.showDismissibleAlertComponent = true
+        })
+      } else if (this.tab === 1) {
+        this.formDataCustom.head.pk = parseFloat(this.formDataCustom.head.pk)
+        this.formDataCustom.head.tdn = parseFloat(this.formDataCustom.head.tdn)
+        this.formDataCustom.head.ca = parseFloat(this.formDataCustom.head.ca)
+        this.formDataCustom.head.p = parseFloat(this.formDataCustom.head.p)
+        this.formDataCustom.item = this.tableDataCustom
+        let sumPK = 0
+        let sumTDN = 0
+        let sumCa = 0
+        let sumP = 0
+        this.showDismissibleAlertCustom= false
+        this.resultCustom = []
+        this.$axios
+        .post('/calculatecustom', this.formDataCustom)
+        .then(res=>{
+          if (res.data[1] === null) {
+            this.showDismissibleAlertCustom = true
+          }
+          else {
+            this.resultCustom = this.tableDataCustom
+            this.resultCustom.forEach(object => {
+              object.resPercentage = 0;
+            });
+            for (let i = 0; i < this.resultCustom.length; i++) {
+              this.resultCustom[i].resPercentage = res.data[1][i];
+              sumPK += this.resultCustom[i].cp * this.resultCustom[i].resPercentage
+              sumTDN += this.resultCustom[i].tdn * this.resultCustom[i].resPercentage
+              sumCa += this.resultCustom[i].ca * this.resultCustom[i].resPercentage
+              sumP += this.resultCustom[i].p * this.resultCustom[i].resPercentage
+            }
+            this.footerDataCustom[0].totalPK = sumPK.toFixed(2) + '%'
+            this.footerDataCustom[0].totalTDN = sumTDN.toFixed(2) + '%'
+            this.footerDataCustom[0].totalCa = sumCa.toFixed(2) + '%'
+            this.footerDataCustom[0].totalP = sumP.toFixed(2) + '%'
+            this.footerDataCustom[0].hargatotal = res.data[2].toFixed()
+            }
         })
         .catch(error => {
           // eslint-disable-next-line no-console
@@ -391,6 +735,11 @@ export default {
         })
       }
     },
+    async downloadPbbh(){
+      await this.$axios.get('/downloadcalculate')
+      .then(res=>{
+      })
+    }
   }
 }
 </script>
