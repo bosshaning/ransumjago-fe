@@ -284,7 +284,25 @@ export default {
           }
          }},
         {
-          field: "bk", key: "bk", title: "Bahan Kering", align: "center"
+          field: "bk", key: "bk", title: "Bahan Kering", align: "center", renderBodyCell: ({ row, column, rowIndex }, h) => {
+          if (row.category === 4) {
+            const text = row[column.field]
+            return h('input', {
+              attrs: {
+                type: 'number',
+                value: text
+              },
+              on: {
+                change: (event) => {
+                  row.bk = parseFloat(event.target.value)
+                }
+              }
+            },
+            )
+          } else {
+            return (row.bk)
+          }
+         }
         },
         { field: "cp", key: "c", title: "Protein Kasar (%)", align: "center", renderBodyCell: ({ row, column, rowIndex }, h) => {
           if (row.category === 4) {
@@ -296,7 +314,7 @@ export default {
               },
               on: {
                 change: (event) => {
-                  row.cp = parseInt(event.target.value)
+                  row.cp = parseFloat(event.target.value)
                 }
               }
             },
