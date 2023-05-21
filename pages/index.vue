@@ -185,6 +185,11 @@
 
 <script>
 import '~/css/styles.css'
+// const config = {
+//   headers:{
+//     Authorization: `Bearer oYiBJDPNz0P8U6KHlqhSwVkx`
+//   }
+// };
 export default {
   name: 'IndexPage',
   data() {
