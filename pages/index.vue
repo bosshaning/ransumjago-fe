@@ -81,7 +81,7 @@
         <div v-show="isCalculate" class="mt-5">
           <p><b>Hasil Optimasi Ransum</b></p>
           <p>Kondisi Sapi : {{ optionsgender[selectedgender].text }}, {{ selectedweight }} Kg </p>
-          <p v-show="result.length !== 0">Berat Kering : {{ resCalculate[0] }} kg</p>
+          <p v-show="result.length !== 0">Berat Kering : {{ resCalculate.wransum }} kg</p>
           <p>Nutrisi yang Harus Diberikan:</p>
           <ve-table class="mt-3" :columns="columnsNutrient" :table-data="resComposition" :border-y="true" />
           <b-alert class="mt-3" v-model="showDismissibleAlert" variant="danger" dismissible>
@@ -678,8 +678,9 @@ export default {
         this.$axios
         .post('/calculate', this.formData)
         .then(res => {
+          console.log(res)
           this.resCalculate = []
-          if (res.data[2] !== null) {
+          if (res.data.price !== null) {
             this.resCalculate = res.data
             this.result = this.tableData
             this.result.forEach(object => {
@@ -688,9 +689,9 @@ export default {
               object.takaranBasah = 0;
             });
             for (let i = 0; i < this.result.length; i++) {
-              this.result[i].resPercentage = res.data[3][i];
-              this.result[i].takaran = (this.result[i].resPercentage * res.data[0]).toFixed(2)
-              this.result[i].takaranBasah = (this.result[i].resPercentage * res.data[0]/this.result[i].bk).toFixed(2)
+              this.result[i].resPercentage = res.data.percentage[i];
+              this.result[i].takaran = (this.result[i].resPercentage * res.data.wransum).toFixed(2)
+              this.result[i].takaranBasah = (this.result[i].resPercentage * res.data.wransum/this.result[i].bk).toFixed(2)
               sumPK += this.result[i].cp * this.result[i].resPercentage
               sumTDN += this.result[i].tdn * this.result[i].resPercentage
               sumCa += this.result[i].ca * this.result[i].resPercentage
@@ -700,13 +701,13 @@ export default {
             this.footerData[0].totalTDN = sumTDN.toFixed(2) + '%'
             this.footerData[0].totalCa = sumCa.toFixed(2) + '%'
             this.footerData[0].totalP = sumP.toFixed(2) + '%'
-            this.footerData[0].hargatotal = res.data[2].toFixed()
+            this.footerData[0].hargatotal = res.data.price.toFixed()
           }
           else {
             this.showDismissibleAlert = true
           }
           for (let index = 0; index < this.resComposition.length; index++) {
-            this.resComposition[index].value = -res.data[1][index].toFixed(1)
+            this.resComposition[index].value = -res.data.nutrition[index].toFixed(1)
           }
           this.isCalculate = true
         })
@@ -730,7 +731,7 @@ export default {
         this.$axios
         .post('/calculatecustom', this.formDataCustom)
         .then(res=>{
-          if (res.data[1] === null) {
+          if (res.data.price === null) {
             this.showDismissibleAlertCustom = true
           }
           else {
@@ -739,7 +740,7 @@ export default {
               object.resPercentage = 0;
             });
             for (let i = 0; i < this.resultCustom.length; i++) {
-              this.resultCustom[i].resPercentage = res.data[1][i];
+              this.resultCustom[i].resPercentage = res.data.percentage[i];
               sumPK += this.resultCustom[i].cp * this.resultCustom[i].resPercentage
               sumTDN += this.resultCustom[i].tdn * this.resultCustom[i].resPercentage
               sumCa += this.resultCustom[i].ca * this.resultCustom[i].resPercentage
@@ -749,7 +750,7 @@ export default {
             this.footerDataCustom[0].totalTDN = sumTDN.toFixed(2) + '%'
             this.footerDataCustom[0].totalCa = sumCa.toFixed(2) + '%'
             this.footerDataCustom[0].totalP = sumP.toFixed(2) + '%'
-            this.footerDataCustom[0].hargatotal = res.data[2].toFixed()
+            this.footerDataCustom[0].hargatotal = res.data.price.toFixed()
             }
         })
         .catch(error => {
