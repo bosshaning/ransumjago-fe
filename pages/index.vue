@@ -9,28 +9,32 @@
           <h4>Ransum Optimal dengan Harga Minimal</h4>
         </div>
     <b-tabs v-model="tab" content-class="mt-3">
-      <b-tab title="Ransum PBBH">
+      <b-tab title="Multi Ransum PBBH">
         <div>
           <b-alert class="mt-3" v-model="showDismissibleAlertComponent" variant="danger" dismissible>
             Cek Kembali Bahan dan PBBH yang Diinginkan
           </b-alert>
           <p><b>Kondisi Sapi</b></p>
           <div class="mt-3">
+            <p>Nama Sapi</p>
+            <b-form-input v-model="namaSapi" type="text"></b-form-input>
+          </div>
+          <div class="mt-3">
             <p>Tipe Pemeliharaan</p>
-            <b-form-select v-model="selectedtype" :options="optionstype"></b-form-select>
+            <b-form-select v-model="tipePemeliharaan" :options="optionstype"></b-form-select>
           </div>
           <div class="mt-3">
             <p>Bobot Sapi (Kg)</p>
-            <b-form-input v-model="selectedweight" type="number"></b-form-input>
+            <b-form-input v-model="bobotSapi" type="number"></b-form-input>
             <!-- <b-form-select v-model="selectedweight" :options="optionsweight"></b-form-select> -->
           </div>
           <div class="mt-3">
             <p>Jenis Kelamin Sapi</p>
-            <b-form-select v-model="selectedgender" :options="optionsgender"></b-form-select>
+            <b-form-select v-model="jenisKelamin" :options="optionsgender"></b-form-select>
           </div>
           <div v-if="selectedtype === 1" class="mt-3">
             <p>PBBH yang Diinginkan (Kg)</p>
-            <b-form-select v-model="selectedpbbh">
+            <b-form-select v-model="pbbh">
               <option :value="null" disabled>-- Pilih Pertumbuhan Bobot Badan Harian --</option>
               <option v-for="option in filterPbbh" :key="option.adg" :value="option.id" >
             <p>{{ option.adg }}</p>
@@ -39,71 +43,77 @@
           </div>
           <div class="mt-3">
             <p>Kemampuan Konsumsi (%)</p>
-            <b-form-input v-model="consumption" placeholder="2.2 (Opsional)"></b-form-input>
+            <b-form-input v-model="kemampuanKonsumsi" placeholder="2.2 (Opsional)"></b-form-input>
           </div>
-        </div>
-
-        <div class="mt-3">
+          <button class="mt-3" @click="onAddSapi()">+ Tambahkan Sapi</button>
+          <div class="mt-3">
+            <ve-table class="mt-3" :fixed-header="true" :columns="columnsSapi" :table-data="tableSapi" />
+            <div v-show="tableSapi.length === 0" class="p-5 text-center border">
+                Tidak Ada Data Sapi yang Ditambahkan
+            </div>
+          </div>
+          <div class="mt-3">
           <p><b>Pilih Bahan Pakan yang Tersedia</b></p>
           <b-form-select v-model="selectedcategory" :options="optionscategory"></b-form-select>
           <b-form-select v-model="selecteditem">
             <option :value="null" disabled>-- Pilih Bahan Pakan --</option>
             <option v-for="option in filterItems" :key="option.id" :value="option.id">
           <p>{{ option.nama }}</p>
-        </option>
-          </b-form-select>
-          <button class="mt-2" :disabled="selecteditem === null" @click.prevent="onAddItems()">+ Bahan Pakan</button>
-          <button class="mt-2" @click.prevent="onAddItemsCustom()">+ Custom Bahan Pakan</button>
-          <ve-table class="mt-3" :fixed-header="true" :columns="columns" :table-data="tableData" />
-          <div v-show="tableData.length === 0" class="p-5 text-center border">
-              Tidak Ada Bahan yang Dimasukkan
+          </option>
+            </b-form-select>
+            <button class="mt-2" :disabled="selecteditem === null" @click.prevent="onAddItems()">+ Bahan Pakan</button>
+            <button class="mt-2" @click.prevent="onAddItemsCustom()">+ Custom Bahan Pakan</button>
+            <ve-table class="mt-3" :fixed-header="true" :columns="columns" :table-data="tableDataMulti" />
+            <div v-show="tableDataMulti.length === 0" class="p-5 text-center border">
+                Tidak Ada Bahan yang Dimasukkan
+            </div>
           </div>
-
-        </div>
-        <div>
-          <button class="mt-2" :disabled="tableData.length === 0" @click.prevent="onsubmit()">Kalkulasi</button>
-        </div>
-        <VueHtml2pdf
-        :show-layout="false"
-        :float-layout="false"
-        :enable-download="true"
-        :preview-modal="false"
-        :paginate-elements-by-height="2480"
-        filename="Hasil Kalkulasi"
-        :pdf-quality="2"
-        :manual-pagination="false"
-        pdf-format="a4"
-        pdf-orientation="portrait"
-        :pdf-content-width="1920"
-        ref="html2Pdf"
-    >
-      <section class="ml-3 mr-3" slot="pdf-content">
-        <div v-show="isCalculate" class="mt-5">
-          <p><b>Hasil Optimasi Ransum</b></p>
-          <p>Kondisi Sapi : {{ optionsgender[selectedgender].text }}, {{ selectedweight }} Kg </p>
-          <p v-show="result.length !== 0">Berat Kering : {{ resCalculate.wransum }} kg</p>
-          <p>Nutrisi yang Harus Diberikan:</p>
-          <ve-table class="mt-3" :columns="columnsNutrient" :table-data="resComposition" :border-y="true" />
-          <b-alert class="mt-3" v-model="showDismissibleAlert" variant="danger" dismissible>
-            Tidak Ada Komposisi Bahan Pakan yang Memenuhi
-          </b-alert>
-          <div v-show="result.length !== 0">
-            <ve-table class="mt-3" :fixed-header="true" :footer-data="footerData" rowKeyFieldName="rowKey" :columns="resColumns" :table-data="result" :border-y="true" />
-            <i>*Perhitungan dapat sedikit bergeser karena faktor pembulatan</i>
+          <div>
+            <button class="mt-2" :disabled="tableDataMulti.length === 0" @click.prevent="onsubmit()">Kalkulasi</button>
           </div>
+          <VueHtml2pdf
+            :show-layout="false"
+            :float-layout="false"
+            :enable-download="true"
+            :preview-modal="false"
+            :paginate-elements-by-height="2480"
+            filename="Hasil Kalkulasi"
+            :pdf-quality="2"
+            :manual-pagination="false"
+            pdf-format="a4"
+            pdf-orientation="portrait"
+            :pdf-content-width="1920"
+            ref="html2Pdf"
+          >
+          <section slot="pdf-content">
+            <div>
+              <div class="mt-5 shadow p-3 mb-5 bg-white rounded" v-for="(result, index) in resMulti" :key="index">
+                <p>Nama Sapi : {{ formData.head[index].namaSapi }}</p>
+                <p>Kondisi Sapi : {{ optionsgender[formData.head[index].jenisKelamin].text }}, {{ formData.head[index].bobotSapi }} Kg </p>
+                <p>Berat Kering : {{ result.wransum }} kg</p>
+                <p>Nutrisi yang Harus Diberikan:</p>
+                <ve-table class="mt-3" :columns="columnsNutrient" :table-data="arrResComposition[index]" :border-y="true" />
+                <div v-show="result.price !== null">
+                  <ve-table class="mt-3" :fixed-header="true" :footer-data="arrFooterData[index]" rowKeyFieldName="rowKey" :columns="resColumns" :table-data="arrResult[index]" :border-y="true" />
+                  <i>*Perhitungan dapat sedikit bergeser karena faktor pembulatan</i>
+                </div>
+                <div v-show="result.price === null" class="p-5 text-center border">
+                  Tidak ada Komposisi yang memenuhi
+                </div>
+                <div v-show="result.price !== null">
+                  <p class="mt-3">Takaran Pemberian:</p>
+                  <ve-table class="mt-3" :columns="columnsTakaran" :table-data="arrResult[index]" :border-y="true" />
+                </div>
+              </div>
+            </div>
+          </section>
+        </VueHtml2pdf>
+        <div v-show="resMulti.length !== 0" class="mt-3">
+          <button @click.prevent="generateReport()">Download Hasil</button>
         </div>
-      </section>
-    </VueHtml2pdf>
-    <div v-show="isCalculate" class="mt-3">
-        <div v-show="result.length !== 0">
-          <p class="mt-3">Takaran Pemberian:</p>
-          <ve-table class="mt-3" :columns="columnsTakaran" :table-data="result" :border-y="true" />
         </div>
-      </div>
-    <div v-show="result.length !== 0" class="mt-3 mx-3">
-      <button @click.prevent="generateReport()">Download Hasil</button>
-    </div>
       </b-tab>
+
       <b-tab title="Ransum Custom">
         <div class="mt-3">
           <p><b>Komposisi Nutrisi yang Diinginkan</b></p>
@@ -195,9 +205,16 @@ export default {
   data() {
     return {
       tab: 0,
+      isPbbh: true,
       showDismissibleAlert: false,
       showDismissibleAlertComponent: false,
       showDismissibleAlertCustom: false,
+      namaSapi: '',
+      tipePemeliharaan: 1,
+      bobotSapi: 100,
+      jenisKelamin: 0,
+      pbbh: null,
+      kemampuanKonsumsi: null,
       selectedtype: 1,
       selectedransum: 1,
       selectedcategory: 0,
@@ -209,6 +226,9 @@ export default {
       consumption: null,
       isCalculate: false,
       resCalculate: [],
+      resMulti: [],
+      arrResult: [],
+      arrFooterData: [],
       optionstype: [
         {value: 1, text: "Penggemukan"},
         {value: 2, text: "Breeding"}
@@ -256,6 +276,64 @@ export default {
           nama: 'Fosfor (%)',
           value: 0
         }
+      ],
+      columnsSapi:[
+      { field: "namaSapi", key: "namaSapi", title: "Nama Sapi", align: "center", fixed: "left", renderBodyCell: null},
+      { field: "tipePemeliharaan", key: "tipePemeliharaan", title: "Tipe Pemeliharaan", align: "center", fixed: "left", renderBodyCell: ({ row, column, rowIndex }, h) => {
+          if (row.tipePemeliharaan === 1) {
+            return "Penggemukan"
+          } else if (row.tipePemeliharaan === 2) {
+            return "Breeding"
+          } else if (row.tipePemeliharaan === 3) {
+            return "Sapi Dara"
+          } else {
+            return "Custom"
+          }
+         }},
+      { field: "bobotSapi", key: "bobotSapi", title: "Bobot Sapi", align: "center", fixed: "left", renderBodyCell: null},
+      { field: "jenisKelamin", key: "jenisKelamin", title: "Jenis Kelamin", align: "center", fixed: "left", renderBodyCell: ({ row, column, rowIndex }, h) => {
+          if (row.jenisKelamin === 0) {
+            return "Jantan"
+          } else if (row.jenisKelamin === 1) {
+            return "Betina"
+          }
+         }},
+      { field: "pbbh", key: "pbbh", title: "PBBH", align: "center", fixed: "left", renderBodyCell: null},
+      { field: "kemampuanKonsumsi", key: "kemampuanKonsumsi", title: "Kemampuan Konsumsi", align: "center", fixed: "left", renderBodyCell: ({ row, column, rowIndex }, h) => {
+          if (row.kemampuanKonsumsi === null ||row.kemampuanKonsumsi === '' ) {
+            return "Default"
+          } else {
+            return row.kemampuanKonsumsi
+          }
+         }},
+      { field: "", key: "e", title: "Action", center: "left", renderBodyCell: ({ row, column, rowIndex }, h) => {
+        return h(
+          'div',
+          {
+            domProps: {
+              classList: 'flex v-center flex--wrap flex-gap-14'
+            }
+          },
+          [
+            h(
+              'button',
+              {
+                domProps: {
+                  classList: 'btn--red pv-4 ph-8'
+                },
+                on: {
+                  click: () => this.onClickDeleteSapi(rowIndex)
+                }
+              },
+              [
+                h('span', {
+                  class: 'fas fa-trash'
+                })
+              ]
+            )
+          ]
+        )
+        }},
       ],
       columns: [
         { field: "nama", key: "a", title: "Nama Bahan", align: "center", fixed: "left", renderBodyCell: ({ row, column, rowIndex }, h) => {
@@ -465,16 +543,16 @@ export default {
           return ((row.resPercentage*100).toFixed(2) + '%')
          }},
         { field: "totalPK", key: "totalPK", title: "Total PK", align: "center",renderBodyCell: ({ row, column, rowIndex }, h) => {
-        return ((row.cp*row.resPercentage).toFixed(2) + '%')
+        return ((row.cp*row.resPercentage*row.bk).toFixed(2) + '%')
         }},
         { field: "totalTDN", key: "totalTDN", title: "Total TDN", align: "center",renderBodyCell: ({ row, column, rowIndex }, h) => {
-        return ((row.tdn*row.resPercentage).toFixed(2) + '%')
+        return ((row.tdn*row.resPercentage*row.bk).toFixed(2) + '%')
         }},
         { field: "totalCa", key: "totalCa", title: "Total Ca", align: "center",renderBodyCell: ({ row, column, rowIndex }, h) => {
-        return ((row.ca*row.resPercentage).toFixed(2) + '%')
+        return ((row.ca*row.resPercentage*row.bk).toFixed(2) + '%')
         }},
         { field: "totalP", key: "totalP", title: "Total P", align: "center",renderBodyCell: ({ row, column, rowIndex }, h) => {
-        return ((row.p*row.resPercentage).toFixed(2) + '%')
+        return ((row.p*row.resPercentage*row.bk).toFixed(2) + '%')
         }},
         { field: "hargatotal", key: "hargatotal", title: "Harga", align: "center", fixed: 'right', renderBodyCell: ({ row, column, rowIndex }, h) => {
         return ((row.harga*row.resPercentage).toFixed())
@@ -489,7 +567,10 @@ export default {
       { field: "takaran", key: "takaran", title: "Takaran Bahan Kering (Kg)", align: "center", renderBodyCell: null, fixed: "left" },
       { field: "takaranBasah", key: "takaranBasah", title: "Takaran Bahan Basah (Kg)", align: "center", renderBodyCell: null, fixed: "left" }
       ],
-      tableData: [],
+
+      tableDataMulti: [],
+      tableSapi:[],
+      arrResComposition: [],
       tableDataCustom: [],
       dataItems: {},
       dataType: {},
@@ -497,7 +578,6 @@ export default {
       formData: {
         head: [],
         item: [],
-        consumption: null
       },
       formDataCustom: {
         head : {
@@ -603,23 +683,35 @@ export default {
         this.dataItems = res.data
       })
     },
+    onAddSapi(){
+      this.tableSapi.push(
+        {
+          namaSapi: this.namaSapi,
+          tipePemeliharaan: this.tipePemeliharaan,
+          bobotSapi: this.bobotSapi,
+          jenisKelamin: this.jenisKelamin,
+          pbbh: this.pbbh,
+          kemampuanKonsumsi: this.kemampuanKonsumsi,
+        }
+      )
+    },
     onAddItems(){
       const item = this.dataItems.find(x=>x.id===this.selecteditem)
-      if (this.tab === 0) {
-        const checkitem = this.tableData.find(x=>x.id===this.selecteditem)
-        if (checkitem === undefined) {
-          this.tableData.push(item);
-        }
-      } else if (this.tab === 1) {
+      if (this.tab === 1) {
         const checkitem = this.tableDataCustom.find(x=>x.id===this.selecteditem)
         if (checkitem === undefined) {
           this.tableDataCustom.push(item);
         }
+      } else if (this.tab === 0) {
+        const checkitem = this.tableDataMulti.find(x=>x.id===this.selecteditem)
+        if (checkitem === undefined) {
+          this.tableDataMulti.push(item);
+        }
       }
     },
     onAddItemsCustom(){
-      if (this.tab === 0) {
-        this.tableData.push(
+      if (this.tab === 1) {
+        this.tableDataCustom.push(
         {
         category: 4,
         nama: "Custom",
@@ -634,8 +726,8 @@ export default {
         harga: 0
         },
         )
-      } else if (this.tab === 1) {
-        this.tableDataCustom.push(
+      } else if (this.tab === 0) {
+        this.tableDataMulti.push(
         {
         category: 4,
         nama: "Custom",
@@ -653,70 +745,17 @@ export default {
       }
     },
     onClickDelete(rowIndex){
-      if (this.tab === 0) {
-        this.tableData.splice(rowIndex, 1);
-      } else if (this.tab === 1) {
+      if (this.tab === 1) {
         this.tableDataCustom.splice(rowIndex, 1);
+      } else if (this.tab === 0) {
+        this.tableDataMulti.splice(rowIndex, 1);
       }
     },
+    onClickDeleteSapi(rowIndex){
+      this.tableSapi.splice(rowIndex, 1);
+    },
     onsubmit(){
-      if (this.tab === 0) {
-        this.showDismissibleAlert = false
-        this.showDismissibleAlertComponent = false
-        this.result = []
-        this.formData.consumption = null
-        const item = this.dataType.find(x=>x.id===this.selectedpbbh)
-        this.formData.head = item
-        this.formData.item = this.tableData
-        if (this.consumption !== null && this.consumption !== '') {
-          this.formData.consumption = parseFloat(this.consumption)
-        }
-        let sumPK = 0
-        let sumTDN = 0
-        let sumCa = 0
-        let sumP = 0
-        this.$axios
-        .post('/calculate', this.formData)
-        .then(res => {
-          console.log(res)
-          this.resCalculate = []
-          if (res.data.price !== null) {
-            this.resCalculate = res.data
-            this.result = this.tableData
-            this.result.forEach(object => {
-              object.resPercentage = 0;
-              object.takaran = 0;
-              object.takaranBasah = 0;
-            });
-            for (let i = 0; i < this.result.length; i++) {
-              this.result[i].resPercentage = res.data.percentage[i];
-              this.result[i].takaran = (this.result[i].resPercentage * res.data.wransum).toFixed(2)
-              this.result[i].takaranBasah = (this.result[i].resPercentage * res.data.wransum/this.result[i].bk).toFixed(2)
-              sumPK += this.result[i].cp * this.result[i].resPercentage
-              sumTDN += this.result[i].tdn * this.result[i].resPercentage
-              sumCa += this.result[i].ca * this.result[i].resPercentage
-              sumP += this.result[i].p * this.result[i].resPercentage
-            }
-            this.footerData[0].totalPK = sumPK.toFixed(2) + '%'
-            this.footerData[0].totalTDN = sumTDN.toFixed(2) + '%'
-            this.footerData[0].totalCa = sumCa.toFixed(2) + '%'
-            this.footerData[0].totalP = sumP.toFixed(2) + '%'
-            this.footerData[0].hargatotal = res.data.price.toFixed()
-          }
-          else {
-            this.showDismissibleAlert = true
-          }
-          for (let index = 0; index < this.resComposition.length; index++) {
-            this.resComposition[index].value = -res.data.nutrition[index].toFixed(1)
-          }
-          this.isCalculate = true
-        })
-        .catch(error => {
-          // eslint-disable-next-line no-console
-          console.log(error)
-          this.showDismissibleAlertComponent = true
-        })
-      } else if (this.tab === 1) {
+      if (this.tab === 1) {
         this.formDataCustom.head.pk = parseFloat(this.formDataCustom.head.pk)
         this.formDataCustom.head.tdn = parseFloat(this.formDataCustom.head.tdn)
         this.formDataCustom.head.ca = parseFloat(this.formDataCustom.head.ca)
@@ -757,13 +796,100 @@ export default {
           // eslint-disable-next-line no-console
           console.log(error)
         })
+      } else if (this.tab === 0) {
+        this.resMulti = []
+        this.arrResComposition = []
+        this.arrResult = []
+        this.arrFooterData = []
+        // eslint-disable-next-line prefer-const
+        let arr = []
+        this.tableSapi.forEach(sapi => {
+          const hund = parseInt(Math.floor(sapi.bobotSapi / 50))
+          const num = sapi.bobotSapi - 50*hund
+          let inputweight = 0
+          if (num === 0) {
+            // eslint-disable-next-line vue/no-side-effects-in-computed-properties
+            inputweight = 50*hund
+          }
+          else {
+            inputweight = 50*(hund+1)
+          }
+          if (sapi.tipePemeliharaan === 1) {
+            // eslint-disable-next-line prefer-const
+            let dataKonsumsi = {...this.dataType.find(x=>x.weight===inputweight && x.adg === sapi.pbbh && x.gender === sapi.jenisKelamin && x.type === "fattening")}
+            dataKonsumsi.namaSapi = sapi.namaSapi
+            dataKonsumsi.jenisKelamin = sapi.jenisKelamin
+            dataKonsumsi.bobotSapi = sapi.bobotSapi
+            if (sapi.kemampuanKonsumsi !== null) {
+              dataKonsumsi.dmi = parseFloat(sapi.kemampuanKonsumsi)
+            }
+            arr.push(dataKonsumsi)
+          } else if (sapi.tipePemeliharaan === 2) {
+            const dataKonsumsi = {...this.dataType.find(x=>x.weight===inputweight && x.gender === sapi.jenisKelamin && x.type === "breeding")}
+            if (sapi.kemampuanKonsumsi !== null) {
+              dataKonsumsi.dmi = parseFloat(sapi.kemampuanKonsumsi)
+            }
+            arr.push(dataKonsumsi)
+          }
+        });
+        this.formData.head = arr
+        this.formData.item = this.tableDataMulti
+        this.$axios
+        .post('/calculatemulti', this.formData)
+        .then(res=>{
+          this.resMulti = res.data
+          this.resMulti.forEach(ress => {
+            const label = ['Protein Kasar (%)', 'TDN (%)', 'Kalsium (%)', 'Fosfor (%)']
+            // eslint-disable-next-line prefer-const
+            let composition = []
+            for (let index = 0; index < 4; index++) {
+              composition.push({nama: label[index], value: -ress.nutrition[index].toFixed(1)});
+            }
+            this.arrResComposition.push(composition)
+            if (ress.price !== null) {
+              let sumPK = 0
+              let sumTDN = 0
+              let sumCa = 0
+              let sumP = 0
+              this.result = []
+              this.result = JSON.parse(JSON.stringify(this.tableDataMulti));
+              this.result.forEach(object => {
+                object.resPercentage = 0;
+                object.takaran = 0;
+                object.takaranBasah = 0;
+              });
+              for (let i = 0; i < this.result.length; i++) {
+                this.result[i].resPercentage = ress.percentage[i];
+                this.result[i].takaran = (this.result[i].resPercentage * ress.wransum).toFixed(2)
+                this.result[i].takaranBasah = (this.result[i].resPercentage * ress.wransum/this.result[i].bk).toFixed(2)
+                sumPK += this.result[i].cp * this.result[i].resPercentage
+                sumTDN += this.result[i].tdn * this.result[i].resPercentage
+                sumCa += this.result[i].ca * this.result[i].resPercentage
+                sumP += this.result[i].p * this.result[i].resPercentage
+              }
+              this.arrResult.push(this.result)
+
+              // eslint-disable-next-line prefer-const
+              let fd = JSON.parse(JSON.stringify(this.footerData));
+              fd[0].totalPK = sumPK.toFixed(2) + '%'
+              fd[0].totalTDN = sumTDN.toFixed(2) + '%'
+              fd[0].totalCa = sumCa.toFixed(2) + '%'
+              fd[0].totalP = sumP.toFixed(2) + '%'
+              fd[0].hargatotal = ress.price.toFixed()
+              this.arrFooterData.push(fd)
+            }
+            else {
+              this.arrResult.push([])
+              this.footerData.push([])
+            }
+          });
+        })
+        .catch(error => {
+          // eslint-disable-next-line no-console
+          console.log(error)
+        })
       }
     },
-    async downloadPbbh(){
-      await this.$axios.get('/downloadcalculate')
-      .then(res=>{
-      })
-    }
   }
 }
 </script>
