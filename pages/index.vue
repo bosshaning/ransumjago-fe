@@ -41,10 +41,6 @@
           </option>
             </b-form-select>
           </div>
-          <div class="mt-3">
-            <p>Kemampuan Konsumsi (%)</p>
-            <b-form-input v-model="kemampuanKonsumsi" placeholder="2.2 (Opsional)"></b-form-input>
-          </div>
           <button class="mt-3" @click="onAddSapi()">+ Tambahkan Sapi</button>
           <div class="mt-3">
             <ve-table class="mt-3" :fixed-header="true" :columns="columnsSapi" :table-data="tableSapi" />
@@ -214,7 +210,6 @@ export default {
       bobotSapi: 100,
       jenisKelamin: 0,
       pbbh: null,
-      kemampuanKonsumsi: null,
       selectedtype: 1,
       selectedransum: 1,
       selectedcategory: 0,
@@ -279,7 +274,7 @@ export default {
       ],
       columnsSapi:[
       { field: "namaSapi", key: "namaSapi", title: "Nama Sapi", align: "center", fixed: "left", renderBodyCell: null},
-      { field: "tipePemeliharaan", key: "tipePemeliharaan", title: "Tipe Pemeliharaan", align: "center", fixed: "left", renderBodyCell: ({ row, column, rowIndex }, h) => {
+      { field: "tipePemeliharaan", key: "tipePemeliharaan", title: "Tipe Pemeliharaan", align: "center", renderBodyCell: ({ row, column, rowIndex }, h) => {
           if (row.tipePemeliharaan === 1) {
             return "Penggemukan"
           } else if (row.tipePemeliharaan === 2) {
@@ -290,23 +285,16 @@ export default {
             return "Custom"
           }
          }},
-      { field: "bobotSapi", key: "bobotSapi", title: "Bobot Sapi", align: "center", fixed: "left", renderBodyCell: null},
-      { field: "jenisKelamin", key: "jenisKelamin", title: "Jenis Kelamin", align: "center", fixed: "left", renderBodyCell: ({ row, column, rowIndex }, h) => {
+      { field: "bobotSapi", key: "bobotSapi", title: "Bobot Sapi", align: "center", renderBodyCell: null},
+      { field: "jenisKelamin", key: "jenisKelamin", title: "Jenis Kelamin", align: "center", renderBodyCell: ({ row, column, rowIndex }, h) => {
           if (row.jenisKelamin === 0) {
             return "Jantan"
           } else if (row.jenisKelamin === 1) {
             return "Betina"
           }
          }},
-      { field: "pbbh", key: "pbbh", title: "PBBH", align: "center", fixed: "left", renderBodyCell: null},
-      { field: "kemampuanKonsumsi", key: "kemampuanKonsumsi", title: "Kemampuan Konsumsi", align: "center", fixed: "left", renderBodyCell: ({ row, column, rowIndex }, h) => {
-          if (row.kemampuanKonsumsi === null ||row.kemampuanKonsumsi === '' ) {
-            return "Default"
-          } else {
-            return row.kemampuanKonsumsi
-          }
-         }},
-      { field: "", key: "e", title: "Action", center: "left", renderBodyCell: ({ row, column, rowIndex }, h) => {
+      { field: "pbbh", key: "pbbh", title: "PBBH", align: "center", renderBodyCell: null},
+      { field: "", key: "e", title: "Action", fixed:"right", center: "left", renderBodyCell: ({ row, column, rowIndex }, h) => {
         return h(
           'div',
           {
@@ -691,7 +679,6 @@ export default {
           bobotSapi: this.bobotSapi,
           jenisKelamin: this.jenisKelamin,
           pbbh: this.pbbh,
-          kemampuanKonsumsi: this.kemampuanKonsumsi,
         }
       )
     },
@@ -820,15 +807,9 @@ export default {
             dataKonsumsi.namaSapi = sapi.namaSapi
             dataKonsumsi.jenisKelamin = sapi.jenisKelamin
             dataKonsumsi.bobotSapi = sapi.bobotSapi
-            if (sapi.kemampuanKonsumsi !== null) {
-              dataKonsumsi.dmi = parseFloat(sapi.kemampuanKonsumsi)
-            }
             arr.push(dataKonsumsi)
           } else if (sapi.tipePemeliharaan === 2) {
             const dataKonsumsi = {...this.dataType.find(x=>x.weight===inputweight && x.gender === sapi.jenisKelamin && x.type === "breeding")}
-            if (sapi.kemampuanKonsumsi !== null) {
-              dataKonsumsi.dmi = parseFloat(sapi.kemampuanKonsumsi)
-            }
             arr.push(dataKonsumsi)
           }
         });
