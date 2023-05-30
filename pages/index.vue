@@ -269,7 +269,7 @@ export default {
         }
       ],
       columnsSapi:[
-      { field: "namaSapi", key: "namaSapi", title: "Nama Sapi", align: "center", fixed: "left", renderBodyCell: null},
+      { field: "namaSapi", key: "namaSapi", title: "Nama Sapi", align: "center", renderBodyCell: null},
       { field: "tipePemeliharaan", key: "tipePemeliharaan", title: "Tipe Pemeliharaan", align: "center", renderBodyCell: ({ row, column, rowIndex }, h) => {
           if (row.tipePemeliharaan === 1) {
             return "Penggemukan"
@@ -320,7 +320,7 @@ export default {
         }},
       ],
       columns: [
-        { field: "nama", key: "a", title: "Nama Bahan", align: "center", fixed: "left", renderBodyCell: ({ row, column, rowIndex }, h) => {
+        { field: "nama", key: "a", title: "Nama Bahan", align: "center", renderBodyCell: ({ row, column, rowIndex }, h) => {
           if (row.category === 4) {
             const text = row[column.field]
             return h('input', {
