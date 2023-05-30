@@ -11,8 +11,10 @@
     <b-tabs v-model="tab" content-class="mt-3">
       <b-tab title="Multi Ransum PBBH">
         <div>
-          <b-alert class="mt-3" v-model="showDismissibleAlertComponent" variant="danger" dismissible>
-            Cek Kembali Bahan dan PBBH yang Diinginkan
+          <b-alert class="mt-3" v-model="showDismissibleAlert" variant="danger" dismissible>
+            <ul>
+              <span v-html="textAlert"></span>
+            </ul>
           </b-alert>
           <p><b>Kondisi Sapi</b></p>
           <div class="mt-3">
@@ -26,16 +28,15 @@
           <div class="mt-3">
             <p>Bobot Sapi (Kg)</p>
             <b-form-input v-model="bobotSapi" type="number"></b-form-input>
-            <!-- <b-form-select v-model="selectedweight" :options="optionsweight"></b-form-select> -->
           </div>
-          <div class="mt-3">
+          <div v-show="tipePemeliharaan===1" class="mt-3">
             <p>Jenis Kelamin Sapi</p>
             <b-form-select v-model="jenisKelamin" :options="optionsgender"></b-form-select>
           </div>
-          <div v-if="selectedtype === 1" class="mt-3">
+          <div v-show="tipePemeliharaan === 1" class="mt-3">
             <p>PBBH yang Diinginkan (Kg)</p>
             <b-form-select v-model="pbbh">
-              <option :value="null" disabled>-- Pilih Pertumbuhan Bobot Badan Harian --</option>
+              <!-- <option :value="null" disabled>-- Pilih Pertumbuhan Bobot Badan Harian --</option> -->
               <option v-for="option in filterPbbh" :key="option.adg" :value="option.id" >
             <p>{{ option.adg }}</p>
           </option>
@@ -85,6 +86,7 @@
             <div>
               <div class="mt-5 shadow p-3 mb-5 bg-white rounded" v-for="(result, index) in resMulti" :key="index">
                 <p>Nama Sapi : {{ formData.head[index].namaSapi }}</p>
+                <p>Tipe Pemeliharaan: {{ optionstype[formData.head[index].tipePemeliharaan].text }}</p>
                 <p>Kondisi Sapi : {{ optionsgender[formData.head[index].jenisKelamin].text }}, {{ formData.head[index].bobotSapi }} Kg </p>
                 <p>Berat Kering : {{ result.wransum }} kg</p>
                 <p>Nutrisi yang Harus Diberikan:</p>
@@ -203,18 +205,14 @@ export default {
       tab: 0,
       isPbbh: true,
       showDismissibleAlert: false,
-      showDismissibleAlertComponent: false,
+      textAlert : "",
       showDismissibleAlertCustom: false,
       namaSapi: '',
       tipePemeliharaan: 1,
       bobotSapi: 100,
       jenisKelamin: 0,
       pbbh: null,
-      selectedtype: 1,
-      selectedransum: 1,
       selectedcategory: 0,
-      selectedweight: 100,
-      selectedgender: 0,
       selectedpbbh: null,
       selecteditem: null,
       weight: null,
@@ -226,11 +224,9 @@ export default {
       arrFooterData: [],
       optionstype: [
         {value: 1, text: "Penggemukan"},
-        {value: 2, text: "Breeding"}
-      ],
-      optionsransum: [
-        {value: 1, text: "Ransum Komplit", rule: "Bahan pakan yang dimasukkan harus terdiri dari hijauan, sumber karbohidrat, dan sumber protein"},
-        {value: 2, text: "Konsentrat", rule: "Bahan pakan yang dimasukkan harus terdiri dari sumber karbohidrat dan sumber protein"}
+        {value: 2, text: "Sapi Dara"},
+        {value: 3, text: "Sapi Bunting"},
+        {value: 4, text: "Sapi Menyusui"}
       ],
       optionscategory: [
         {value: 0, text: "Semua"},
@@ -278,11 +274,11 @@ export default {
           if (row.tipePemeliharaan === 1) {
             return "Penggemukan"
           } else if (row.tipePemeliharaan === 2) {
-            return "Breeding"
-          } else if (row.tipePemeliharaan === 3) {
             return "Sapi Dara"
+          } else if (row.tipePemeliharaan === 3) {
+            return "Sapi Bunting"
           } else {
-            return "Custom"
+            return "Sapi Menyusui"
           }
          }},
       { field: "bobotSapi", key: "bobotSapi", title: "Bobot Sapi", align: "center", renderBodyCell: null},
@@ -496,7 +492,7 @@ export default {
         },
         )}
         },
-        { field: "", key: "e", title: "Action", center: "left", renderBodyCell: ({ row, column, rowIndex }, h) => {
+        { field: "", key: "e", title: "Action", center: "left", fixed: "right", renderBodyCell: ({ row, column, rowIndex }, h) => {
         return h(
           'div',
           {
@@ -630,8 +626,8 @@ export default {
       }
     },
     filterPbbh() {
-      const hund = parseInt(Math.floor(this.selectedweight / 50))
-      const num = this.selectedweight - 50*hund
+      const hund = parseInt(Math.floor(this.bobotSapi / 50))
+      const num = this.bobotSapi - 50*hund
       let inputweight = 0
       if (num === 0) {
         // eslint-disable-next-line vue/no-side-effects-in-computed-properties
@@ -640,11 +636,10 @@ export default {
       else {
         inputweight = 50*(hund+1)
       }
-      console.log(inputweight);
       // eslint-disable-next-line vue/no-side-effects-in-computed-properties
       this.optionsPbbh = [];
       for (let i = 0; i < this.dataType.length; i++) {
-          if (this.dataType[i].gender === this.selectedgender && this.dataType[i].weight === inputweight) {
+          if (this.dataType[i].gender === this.jenisKelamin && this.dataType[i].weight === inputweight) {
           // eslint-disable-next-line vue/no-side-effects-in-computed-properties
           this.optionsPbbh.push(this.dataType[i])
         }
@@ -672,15 +667,44 @@ export default {
       })
     },
     onAddSapi(){
-      this.tableSapi.push(
+      this.showDismissibleAlert = false
+      this.textAlert = ''
+      const item = this.tableSapi.find(x=>x.namaSapi===this.namaSapi)
+      if (this.namaSapi === '' || this.namaSapi === null) {
+        this.textAlert += "<li>Pastikan Anda sudah mengisi nama sapi </li>"
+        this.showDismissibleAlert = true
+      }
+      if (item !== undefined) {
+        this.textAlert += "<li>Nama sapi sudah ada dalam daftar </li>"
+        this.showDismissibleAlert = true
+      }
+      if (this.tipePemeliharaan === 1 && (this.pbbh === ''||this.pbbh === null)) {
+        this.textAlert += "<li>Pastikan Anda sudah mengisi PBBH </li>"
+        this.showDismissibleAlert = true
+      }
+      if (this.tipePemeliharaan === 2 && (this.bobotSapi < 250)) {
+        this.textAlert += "<li>Untuk tipe pemeliharaan <b>SAPI DARA</b> bobot sapi <b>MINIMAL 250 kg</b> </li>"
+        this.showDismissibleAlert = true
+      }
+      if (this.tipePemeliharaan === 3 && (this.bobotSapi < 300)) {
+        this.textAlert += "<li>Untuk tipe pemeliharaan <b>SAPI BUNTING</b> bobot sapi <b>MINIMAL 300 kg</b> </li>"
+        this.showDismissibleAlert = true
+      }
+      if (this.tipePemeliharaan === 4 && (this.bobotSapi < 250)) {
+        this.textAlert += "<li>Untuk tipe pemeliharaan <b>SAPI MENYUSUI</b> bobot sapi <b>MINIMAL 250 kg</b> </li>"
+        this.showDismissibleAlert = true
+      }
+      if (!this.showDismissibleAlert) {
+        this.tableSapi.push(
         {
           namaSapi: this.namaSapi,
           tipePemeliharaan: this.tipePemeliharaan,
           bobotSapi: this.bobotSapi,
-          jenisKelamin: this.jenisKelamin,
-          pbbh: this.pbbh,
+          jenisKelamin: this.tipePemeliharaan===1?this.jenisKelamin : 1,
+          pbbh: this.tipePemeliharaan===1?this.dataType.find(x=>x.id===this.pbbh).adg : '-'
         }
-      )
+        )
+      }
     },
     onAddItems(){
       const item = this.dataItems.find(x=>x.id===this.selecteditem)
@@ -807,9 +831,28 @@ export default {
             dataKonsumsi.namaSapi = sapi.namaSapi
             dataKonsumsi.jenisKelamin = sapi.jenisKelamin
             dataKonsumsi.bobotSapi = sapi.bobotSapi
+            dataKonsumsi.tipePemeliharaan = sapi.tipePemeliharaan
             arr.push(dataKonsumsi)
           } else if (sapi.tipePemeliharaan === 2) {
-            const dataKonsumsi = {...this.dataType.find(x=>x.weight===inputweight && x.gender === sapi.jenisKelamin && x.type === "breeding")}
+            const dataKonsumsi = {...this.dataType.find(x=>x.weight===inputweight && x.gender === 1 && x.type === "heifers gestation")}
+            dataKonsumsi.namaSapi = sapi.namaSapi
+            dataKonsumsi.jenisKelamin = 1
+            dataKonsumsi.bobotSapi = sapi.bobotSapi
+            dataKonsumsi.tipePemeliharaan = sapi.tipePemeliharaan
+            arr.push(dataKonsumsi)
+          } else if (sapi.tipePemeliharaan === 3) {
+            const dataKonsumsi = {...this.dataType.find(x=>x.weight===inputweight && x.gender === 1 && x.type === "mature gestation")}
+            dataKonsumsi.namaSapi = sapi.namaSapi
+            dataKonsumsi.jenisKelamin = 1
+            dataKonsumsi.bobotSapi = sapi.bobotSapi
+            dataKonsumsi.tipePemeliharaan = sapi.tipePemeliharaan
+            arr.push(dataKonsumsi)
+          } else if (sapi.tipePemeliharaan === 4) {
+            const dataKonsumsi = {...this.dataType.find(x=>x.weight===inputweight && x.gender === 1 && x.type === "lactating")}
+            dataKonsumsi.namaSapi = sapi.namaSapi
+            dataKonsumsi.jenisKelamin = 1
+            dataKonsumsi.bobotSapi = sapi.bobotSapi
+            dataKonsumsi.tipePemeliharaan = sapi.tipePemeliharaan
             arr.push(dataKonsumsi)
           }
         });
