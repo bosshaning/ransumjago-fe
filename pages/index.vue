@@ -82,30 +82,30 @@
             :pdf-content-width="1920"
             ref="html2Pdf"
           >
-          <section slot="pdf-content">
-            <div>
-              <div class="mt-5 shadow p-3 mb-5 bg-white rounded" v-for="(result, index) in resMulti" :key="index">
-                <p>Nama Sapi : {{ formData.head[index].namaSapi }}</p>
-                <p>Tipe Pemeliharaan: {{ optionstype[(formData.head[index].tipePemeliharaan)-1].text }}</p>
-                <p>Kondisi Sapi : {{ optionsgender[formData.head[index].jenisKelamin].text }}, {{ formData.head[index].bobotSapi }} Kg </p>
-                <p>Berat Kering : {{ result.wransum }} kg</p>
-                <p>Nutrisi yang Harus Diberikan:</p>
-                <ve-table class="mt-3" :columns="columnsNutrient" :table-data="arrResComposition[index]" :border-y="true" />
-                <div v-show="result.price !== null">
-                  <ve-table class="mt-3" :fixed-header="true" :footer-data="arrFooterData[index]" rowKeyFieldName="rowKey" :columns="resColumns" :table-data="arrResult[index]" :border-y="true" />
-                  <i>*Perhitungan dapat sedikit bergeser karena faktor pembulatan</i>
-                </div>
-                <div v-show="result.price === null" class="p-5 text-center border">
-                  Tidak ada Komposisi yang memenuhi
-                </div>
-                <div v-show="result.price !== null">
-                  <p class="mt-3">Takaran Pemberian:</p>
-                  <ve-table class="mt-3" :columns="columnsTakaran" :table-data="arrResult[index]" :border-y="true" />
+            <section slot="pdf-content">
+              <div>
+                <div class="mt-5 shadow p-3 mb-5 bg-white rounded" v-for="(result, index) in resMulti" :key="index">
+                  <p>Nama Sapi : {{ formData.head[index].namaSapi }}</p>
+                  <p>Tipe Pemeliharaan: {{ optionstype[(formData.head[index].tipePemeliharaan)-1].text }}</p>
+                  <p>Kondisi Sapi : {{ optionsgender[formData.head[index].jenisKelamin].text }}, {{ formData.head[index].bobotSapi }} Kg </p>
+                  <p>Berat Kering : {{ result.wransum }} kg</p>
+                  <p>Nutrisi yang Harus Diberikan:</p>
+                  <ve-table class="mt-3" :columns="columnsNutrient" :table-data="arrResComposition[index]" :border-y="true" />
+                  <div v-show="result.price !== null">
+                    <ve-table class="mt-3" :fixed-header="true" :footer-data="arrFooterData[index]" rowKeyFieldName="rowKey" :columns="resColumns" :table-data="arrResult[index]" :border-y="true" />
+                    <i>*Perhitungan dapat sedikit bergeser karena faktor pembulatan</i>
+                  </div>
+                  <div v-show="result.price === null" class="p-5 text-center border">
+                    Tidak ada Komposisi yang memenuhi
+                  </div>
+                  <div v-show="result.price !== null">
+                    <p class="mt-3">Takaran Pemberian:</p>
+                    <ve-table class="mt-3" :columns="columnsTakaran" :table-data="arrResult[index]" :border-y="true" />
+                  </div>
                 </div>
               </div>
-            </div>
-          </section>
-        </VueHtml2pdf>
+            </section>
+          </VueHtml2pdf>
         <div v-show="resMulti.length !== 0" class="mt-3">
           <button @click.prevent="generateReport()">Download Hasil</button>
         </div>
@@ -136,7 +136,7 @@
           <p><b>Pilih Bahan Pakan yang Tersedia</b></p>
           <b-form-select v-model="selectedcategory" :options="optionscategory"></b-form-select>
           <b-form-select v-model="selecteditem">
-            <option :value="null" disabled>-- Please select an option --</option>
+            <option :value="null" disabled>-- Pilih Bahan Pakan --</option>
             <option v-for="option in filterItems" :key="option.id" :value="option.id">
           <p>{{ option.nama }}</p>
         </option>
