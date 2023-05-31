@@ -811,7 +811,7 @@ export default {
           console.log(error)
         })
       } else if (this.tab === 0) {
-        this.showDismissibleAlert = true
+        this.showDismissibleAlert = false
         this.textAlert = ""
         if (this.tableSapi.length === 0) {
           this.textAlert += "<li>Pastikan Anda sudah menambahkan sapi</li>"
