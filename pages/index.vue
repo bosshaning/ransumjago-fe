@@ -811,7 +811,14 @@ export default {
           console.log(error)
         })
       } else if (this.tab === 0) {
-        this.isCalculate = true
+        this.showDismissibleAlert = true
+        this.textAlert = ""
+        if (this.tableSapi.length === 0) {
+          this.textAlert += "<li>Pastikan Anda sudah menambahkan sapi</li>"
+          this.showDismissibleAlert = true
+        }
+        else {
+          this.isCalculate = true
         this.resMulti = []
         this.arrResComposition = []
         this.arrResult = []
@@ -917,6 +924,7 @@ export default {
           // eslint-disable-next-line no-console
           console.log(error)
         })
+        }
       }
     },
   }
