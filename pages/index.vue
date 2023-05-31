@@ -86,7 +86,7 @@
             <div>
               <div class="mt-5 shadow p-3 mb-5 bg-white rounded" v-for="(result, index) in resMulti" :key="index">
                 <p>Nama Sapi : {{ formData.head[index].namaSapi }}</p>
-                <p>Tipe Pemeliharaan: {{ optionstype[formData.head[index].tipePemeliharaan].text }}</p>
+                <p>Tipe Pemeliharaan: {{ optionstype[(formData.head[index].tipePemeliharaan)-1].text }}</p>
                 <p>Kondisi Sapi : {{ optionsgender[formData.head[index].jenisKelamin].text }}, {{ formData.head[index].bobotSapi }} Kg </p>
                 <p>Berat Kering : {{ result.wransum }} kg</p>
                 <p>Nutrisi yang Harus Diberikan:</p>
@@ -277,7 +277,7 @@ export default {
             return "Sapi Dara"
           } else if (row.tipePemeliharaan === 3) {
             return "Sapi Bunting"
-          } else {
+          } else if (row.tipePemeliharaan === 4) {
             return "Sapi Menyusui"
           }
          }},
