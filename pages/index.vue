@@ -1,7 +1,7 @@
 <template>
   <div>
-    <div v-if="$fetchState.pending">
-      Loading
+    <div v-if="$fetchState.pending" class="d-flex justify-content-center my-auto">
+      <b-spinner label="Loading..."></b-spinner>
     </div>
     <div v-else>
       <div class="judul">
@@ -67,6 +67,9 @@
           </div>
           <div>
             <button class="mt-2" :disabled="tableDataMulti.length === 0" @click.prevent="onsubmit()">Kalkulasi</button>
+          </div>
+          <div v-show="isCalculate" class="text-center mt-3">
+            <b-spinner variant="primary" label="Text Centered"></b-spinner>
           </div>
           <VueHtml2pdf
             :show-layout="false"
@@ -808,6 +811,7 @@ export default {
           console.log(error)
         })
       } else if (this.tab === 0) {
+        this.isCalculate = true
         this.resMulti = []
         this.arrResComposition = []
         this.arrResult = []
@@ -907,6 +911,7 @@ export default {
               this.footerData.push([])
             }
           });
+          this.isCalculate = false
         })
         .catch(error => {
           // eslint-disable-next-line no-console
