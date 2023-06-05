@@ -799,10 +799,10 @@ export default {
             });
             for (let i = 0; i < this.resultCustom.length; i++) {
               this.resultCustom[i].resPercentage = res.data.percentage[i];
-              sumPK += this.resultCustom[i].cp * this.resultCustom[i].resPercentage
-              sumTDN += this.resultCustom[i].tdn * this.resultCustom[i].resPercentage
-              sumCa += this.resultCustom[i].ca * this.resultCustom[i].resPercentage
-              sumP += this.resultCustom[i].p * this.resultCustom[i].resPercentage
+              sumPK += this.resultCustom[i].cp * this.resultCustom[i].resPercentage * this.resultCustom[i].bk
+              sumTDN += this.resultCustom[i].tdn * this.resultCustom[i].resPercentage * this.resultCustom[i].bk
+              sumCa += this.resultCustom[i].ca * this.resultCustom[i].resPercentage * this.resultCustom[i].bk
+              sumP += this.resultCustom[i].p * this.resultCustom[i].resPercentage * this.resultCustom[i].bk
             }
             this.footerDataCustom[0].totalPK = sumPK.toFixed(2) + '%'
             this.footerDataCustom[0].totalTDN = sumTDN.toFixed(2) + '%'
