@@ -157,6 +157,9 @@
         <b-alert class="mt-3" v-model="showDismissibleAlertCustom" variant="danger" dismissible>
           Tidak Ada Komposisi Bahan Pakan yang Memenuhi
         </b-alert>
+        <div v-show="isCalculateCustom" class="text-center mt-3">
+          <b-spinner variant="primary" label="Text Centered"></b-spinner>
+        </div>
         <VueHtml2pdf
         :show-layout="false"
         :float-layout="false"
@@ -221,6 +224,7 @@ export default {
       weight: null,
       consumption: null,
       isCalculate: false,
+      isCalculateCustom: false,
       resCalculate: [],
       resMulti: [],
       arrResult: [],
@@ -781,6 +785,7 @@ export default {
         let sumP = 0
         this.showDismissibleAlertCustom= false
         this.resultCustom = []
+        this.isCalculateCustom = true
         this.$axios
         .post('/calculatecustom', this.formDataCustom)
         .then(res=>{
@@ -805,10 +810,12 @@ export default {
             this.footerDataCustom[0].totalP = sumP.toFixed(2) + '%'
             this.footerDataCustom[0].hargatotal = res.data.price.toFixed()
             }
+            this.this.isCalculateCustom = false
         })
         .catch(error => {
           // eslint-disable-next-line no-console
           console.log(error)
+          this.isCalculateCustom = false
         })
       } else if (this.tab === 0) {
         this.showDismissibleAlert = false
