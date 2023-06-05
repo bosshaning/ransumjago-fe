@@ -918,12 +918,13 @@ export default {
               this.footerData.push([])
             }
           });
+          this.isCalculate = false
         })
         .catch(error => {
           // eslint-disable-next-line no-console
           console.log(error)
+          this.isCalculate = false
         })
-        this.isCalculate = false
         }
       }
     },
