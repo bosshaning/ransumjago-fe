@@ -810,7 +810,7 @@ export default {
             this.footerDataCustom[0].totalP = sumP.toFixed(2) + '%'
             this.footerDataCustom[0].hargatotal = res.data.price.toFixed()
             }
-            this.this.isCalculateCustom = false
+            this.isCalculateCustom = false
         })
         .catch(error => {
           // eslint-disable-next-line no-console
