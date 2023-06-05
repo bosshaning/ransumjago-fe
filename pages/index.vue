@@ -897,10 +897,10 @@ export default {
                 this.result[i].resPercentage = ress.percentage[i];
                 this.result[i].takaran = (this.result[i].resPercentage * ress.wransum).toFixed(2)
                 this.result[i].takaranBasah = (this.result[i].resPercentage * ress.wransum/this.result[i].bk).toFixed(2)
-                sumPK += this.result[i].cp * this.result[i].resPercentage
-                sumTDN += this.result[i].tdn * this.result[i].resPercentage
-                sumCa += this.result[i].ca * this.result[i].resPercentage
-                sumP += this.result[i].p * this.result[i].resPercentage
+                sumPK += this.result[i].cp * this.result[i].resPercentage * this.result[i].bk
+                sumTDN += this.result[i].tdn * this.result[i].resPercentage * this.result[i].bk
+                sumCa += this.result[i].ca * this.result[i].resPercentage * this.result[i].bk
+                sumP += this.result[i].p * this.result[i].resPercentage * this.result[i].bk
               }
               this.arrResult.push(this.result)
 
@@ -918,12 +918,12 @@ export default {
               this.footerData.push([])
             }
           });
-          this.isCalculate = false
         })
         .catch(error => {
           // eslint-disable-next-line no-console
           console.log(error)
         })
+        this.isCalculate = false
         }
       }
     },
