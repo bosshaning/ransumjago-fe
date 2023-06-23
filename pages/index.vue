@@ -1,15 +1,37 @@
 <template>
   <div>
+    <nav class="navbar sticky-top navbar-light bg-light m-0">
+      <p></p>
+      <b-button v-b-modal.modal-center class="btn btn-danger me-2 float-right">Help (?)</b-button>
+    </nav>
+    <div class="bd">
     <div v-if="$fetchState.pending" class="d-flex justify-content-center my-auto">
       <b-spinner label="Loading..."></b-spinner>
     </div>
     <div v-else>
+      <b-modal visible id="modal-center" scrollable size="xl" centered title="Panduan Ransum Jago" ok-only>
+        <p class="my-4">
+          Ransum Jago adalah sebuah aplikasi penyusun ransum yang memenuhi kebutuhan nutrisi sapi dengan tujuan untuk meminimalkan harga ransum per Kg. Aplikasi ini dikembangkan menggunakan algoritma titik interior yaitu sebuah algoritma linier programming yang mampu mendapatkan solusi optimal dengan waktu yang relatif cepat.
+        </p>
+        <b-img center src="../static/sapi.jpg" class="sapi mb-3" rounded alt="Center image"></b-img>
+        <b>Halaman dalam Ransum Jago</b>
+        <ol>
+          <li>Multi Ransum</li>
+          <p>Halaman ini ditujukan kepada pengguna yang awam dengan nutrisi ternak. Pengguna hanya perlu mengisikan kondisi sapi dan bahan pakan yang tersedia untuk menyusun ransum. Sistem akan mencoba untuk melakukan kalkulasi mengenai nutrisi yang dibutuhkan oleh sapi dan menemukan kombinasi ransum yang memenuhi nutrisi tersebut dengan harga termurah.</p>
+          <li>Ransum Custom</li>
+          <p>Halaman ini ditujukan kepada pengguna yang sudah memiliki pengetahuan mengenai nutrisi ternak sehingga pengguna dapat mengisikan tujuan nutrisi yang didapatkan secara manual. Selanjutnya, pengguna dapat melakukan kalkulasi ransum dengan mengisikan bahan pakan yang tersedia terlebih dahulu.</p>
+        </ol>
+        <b>Fitur Menarik</b>
+        <p>Pengguna dapat mendownload hasil kalkulasi dalam bentuk PDF dengan menekan tombol <button>Download Hasil</button> pada bagian bawah hasil kalkulasi</p>
+        <b>Kritik dan Saran Pengembangan</b>
+        <p>E-mail : haningnandahapsari@gmail.com</p>
+      </b-modal>
       <div class="judul">
           <h1>Ransum Jago</h1>
           <h4>Ransum Optimal dengan Harga Minimal</h4>
         </div>
     <b-tabs v-model="tab" content-class="mt-3">
-      <b-tab title="Multi Ransum PBBH">
+      <b-tab title="Multi Ransum">
         <div>
           <b-alert class="mt-3" v-model="showDismissibleAlert" variant="danger" dismissible>
             <ul>
@@ -195,6 +217,7 @@
     </b-tabs>
   </div>
   </div>
+  </div>
 </template>
 
 <script>
@@ -206,6 +229,13 @@ import '~/css/styles.css'
 // };
 export default {
   name: 'IndexPage',
+  head () {
+    return {
+      bodyAttrs: {
+        class: 'reset-body'
+      }
+    }
+  },
   data() {
     return {
       tab: 0,
@@ -938,3 +968,15 @@ export default {
   }
 }
 </script>
+
+<style>
+.reset-body {
+  margin: 0
+}
+.bd {
+  margin: 2rem !important;
+}
+.sapi {
+  max-width: 250px;
+}
+</style>
